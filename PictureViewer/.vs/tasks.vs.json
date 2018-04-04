@@ -1,0 +1,10 @@
+{
+  "version": "0.2.1",
+  "tasks": [
+    {
+      "taskName": "task-map",
+      "appliesTo": "PictureViewer/img/map.png",
+      "type": "launch"
+    }
+  ]
+}
