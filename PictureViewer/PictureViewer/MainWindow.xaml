@@ -18,8 +18,8 @@
     <Window.Resources>
         <Storyboard x:Key="story_main_layout" >
             <DoubleAnimation Storyboard.TargetProperty="Width" 
-                             Storyboard.TargetName="wrapp_directories"
-                             From="{Binding ElementName=wrapp_directories, Path=ActualWidth}"
+                             Storyboard.TargetName="scroll_directories"
+                             From="{Binding ElementName=scroll_directories, Path=ActualWidth}"
                              To="{Binding Path=Width_Col1}"
                              Duration="0:0:0.5"
                              >
@@ -28,8 +28,8 @@
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
             <DoubleAnimation Storyboard.TargetProperty="Width" 
-                             Storyboard.TargetName="wrapp_images"
-                             From="{Binding ElementName=wrapp_images, Path=ActualWidth}"
+                             Storyboard.TargetName="scroll_images"
+                             From="{Binding ElementName=scroll_images, Path=ActualWidth}"
                              To="{Binding Path=Width_Col2}"
                              Duration="0:0:0.5"
                              >
@@ -114,9 +114,14 @@
                 </Canvas>
             </Button>
         </StackPanel>
-        <WrapPanel x:Name="wrapp_directories" Width="{Binding Path=Width_Col1}" Margin="0 0 5 0" Grid.Column="1"
-                   Background="Black" Panel.ZIndex="-2">
-            <TreeView x:Name="treev_directories">
+        <ScrollViewer x:Name="scroll_directories" Width="{Binding Path=Width_Col1}" Margin="0 0 5 0" Grid.Column="1"
+                   Background="Black" Panel.ZIndex="-2"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Auto"
+                     
+                      >
+            <TreeView x:Name="treev_directories" ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                      ScrollViewer.VerticalScrollBarVisibility="Hidden" ScrollViewer.CanContentScroll="False">
                 <TreeView.Resources>
                     <Style TargetType="{x:Type TreeViewItem}">
                         <Setter Property="HeaderTemplate">
@@ -163,9 +168,14 @@
                     </TransformGroup>
                 </TreeView.RenderTransform>
             </TreeView>
-        </WrapPanel>
-        <WrapPanel x:Name="wrapp_images" Width="{Binding Path=Width_Col2}" Background="Black" Margin="0 0 0 0" Grid.Column="2"
-                   RenderTransformOrigin="0.5,0.5" Panel.ZIndex="-3">
+        </ScrollViewer>
+        <ScrollViewer  x:Name="scroll_images"
+                   Width="{Binding Path=Width_Col2}" Background="Black" 
+                   Margin="0 0 0 0" Grid.Column="2"
+                       VerticalScrollBarVisibility="Auto"
+                       
+                   Panel.ZIndex="-3">
+            <WrapPanel x:Name="wrapp_images">
             <WrapPanel.RenderTransform>
                 <TransformGroup>
                     <ScaleTransform/>
@@ -184,10 +194,12 @@
                 <Image Source="img/heart.png" Width="120" Height="96" Stretch="Uniform" Margin="10"></Image>
             </Border>
         </WrapPanel>
+        </ScrollViewer>
         <Border x:Name="border_image" Width="{Binding Path=Width_Col3}" Background="Azure" Panel.ZIndex="-4" Grid.Column="3"
                 HorizontalAlignment="Stretch">
             <Image x:Name="img_large"/>
         </Border>
+            
 
         <!--DataGrid DataContext="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}" ItemsSource="{Binding MyList}" AutoGenerateColumns="False" Name="my_datagrid">
             <DataGrid.Columns>

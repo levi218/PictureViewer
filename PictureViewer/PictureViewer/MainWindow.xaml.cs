@@ -72,7 +72,10 @@ namespace PictureViewer
                     case MODE_INDIVIDUAL_PIC:
                         return 0;
                     case MODE_FOLDER:
-                        return (this.ActualWidth - 40) * 0.3<0?150: (this.ActualWidth - 40) * 0.3;
+                        { 
+                        double desired = (this.ActualWidth - 40) * 0.3;
+                        return desired<0?0: desired;
+                        }
                     default:
                         return 0;
                 }
@@ -86,9 +89,15 @@ namespace PictureViewer
                 switch (mode)
                 {
                     case MODE_INDIVIDUAL_PIC:
-                        return (this.ActualWidth - 40) *0.3;
+                        { 
+                            double desired = (this.ActualWidth - 40) * 0.3;
+                            return desired < 0 ? 0 : desired;
+                        }
                     case MODE_FOLDER:
-                        return (this.ActualWidth - 40) * 0.7;
+                        { 
+                        double desired = (this.ActualWidth - 40) * 0.7;
+                        return desired < 0 ? 0 : desired;
+                        }
                     default:
                         return 0;
                 }
@@ -101,7 +110,10 @@ namespace PictureViewer
                 switch (mode)
                 {
                     case MODE_INDIVIDUAL_PIC:
-                        return (this.ActualWidth - 40) * 0.7;
+                        {
+                            double desired = (this.ActualWidth - 40) * 0.7;
+                            return desired < 0 ? 0 : desired;
+                        }
                     case MODE_FOLDER:
                         return 0;
                     default:
@@ -115,9 +127,9 @@ namespace PictureViewer
         {
             InitializeComponent();
             story_main_layout = this.FindResource("story_main_layout") as Storyboard;
-            Uri uri = new Uri(@"C:\Users\theph\OneDrive\Pictures\Screenshots\Screenshot (125).png");
-            BitmapImage bitmapImage = new BitmapImage(uri);
-            img_large.Source = bitmapImage;
+            //Uri uri = new Uri(@"C:\Users\theph\OneDrive\Pictures\Screenshots\Screenshot (125).png");
+            //BitmapImage bitmapImage = new BitmapImage(uri);
+            //img_large.Source = bitmapImage;
 
         }
         private object dummyNode = null;
@@ -153,21 +165,52 @@ namespace PictureViewer
             IEnumerable<FileInfo> files = new DirectoryInfo(item.Tag.ToString()).GetFilesByExtensions(".jpg", ".bmp", ".png");
             Console.WriteLine(item.Tag.ToString() + files.Count());
             wrapp_images.BeginInit();
+            //TODO: load one by one in another thread
             foreach (FileInfo file in files)
             {
                 Console.WriteLine(file.FullName);
                 Border border = new Border { BorderBrush = Brushes.DarkCyan, BorderThickness = new Thickness(1) };
                 Uri uri = new Uri(file.FullName);
-                BitmapImage bitmapImage = new BitmapImage(uri);
-                Image img = new Image { Width = 120, Height = 96, Stretch = Stretch.Uniform, Margin = new Thickness(10), Source = bitmapImage };
+                BitmapImage bitmapImage = new BitmapImage();
+                bitmapImage.BeginInit();
+                bitmapImage.DecodePixelWidth = 120;
+                bitmapImage.DecodePixelHeight = 96;
+                bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+                bitmapImage.UriSource = uri;
+                bitmapImage.EndInit();
+                Image img = new Image { Width = 120, Height = 96,
+                    Stretch = Stretch.Uniform, Margin = new Thickness(10), Source = bitmapImage,
+                    Tag = file.FullName
+                };
+                
+                img.MouseUp += Image_MouseUp;
                 border.BeginInit();
                 border.Child = img;
                 border.EndInit();
                 wrapp_images.Children.Add(border);
+
+                if (wrapp_images.Children.Count > 20) break;
             }
             wrapp_images.EndInit();
             e.Handled = true;
         }
+
+        private void Image_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            Image source = sender as Image;
+            img_large.Source = source.Source;
+            RaiseEvent(new RoutedEventArgs(RoutedPropertyChangedEvent));
+            //TODO: Load full image in another thread;
+            BitmapImage bitmapImage = new BitmapImage();
+            bitmapImage.BeginInit();
+            bitmapImage.CacheOption = BitmapCacheOption.OnDemand;
+            bitmapImage.UriSource = new Uri(source.Tag.ToString());
+            bitmapImage.EndInit();
+            img_large.Source = bitmapImage;
+            mode = MODE_INDIVIDUAL_PIC;
+            
+        }
+
         void folder_Expanded(object sender, RoutedEventArgs e)
         {
             TreeViewItem item = (TreeViewItem)sender;
@@ -216,7 +259,7 @@ namespace PictureViewer
 
         private void btn_folder_Click(object sender, RoutedEventArgs e)
         {
-            mode = (mode==MODE_FOLDER ? MODE_INDIVIDUAL_PIC : MODE_FOLDER);
+            mode = MODE_FOLDER;
             Console.WriteLine(mode);
             Console.WriteLine(Width_Col1);
             RaiseEvent(new RoutedEventArgs(RoutedPropertyChangedEvent));
