@@ -43,9 +43,36 @@ namespace PictureViewer
                 this.RemoveHandler(RoutedPropertyChangedEvent, value);
             }
         }
-        private enum DisplayMode { IndividualPic, Folder };
+        private enum DisplayMode { IndividualPic, Folder, Setting };
         Storyboard story_main_layout;
+        public double HeightTopPanel
+        {
+            get
+            {
+                switch (mode)
+                {
+                    case DisplayMode.Setting:
+                        return this.ActualHeight;
 
+                    default:
+                        return 0;
+                }
+            }
+        }
+        public double WidthTopPanel
+        {
+            get
+            {
+                switch (mode)
+                {
+                    case DisplayMode.Setting:
+                        double desired = (this.ActualWidth - 45);
+                        return desired < 0 ? 0 : desired;
+                    default:
+                        return 0;
+                }
+            }
+        }
         public double Width_Col1
         {
             get
@@ -54,6 +81,7 @@ namespace PictureViewer
                 {
                     case DisplayMode.IndividualPic:
                         return 0;
+                    case DisplayMode.Setting:
                     case DisplayMode.Folder:
                         {
                             double desired = (this.ActualWidth - 45 - SystemParameters.VerticalScrollBarWidth) * 0.25;
@@ -76,6 +104,7 @@ namespace PictureViewer
                             double desired = (this.ActualWidth - 45 - SystemParameters.VerticalScrollBarWidth) * 0.25;
                             return desired < 0 ? 0 : desired;
                         }
+                    case DisplayMode.Setting:
                     case DisplayMode.Folder:
                         {
                             double desired = (this.ActualWidth - 45 - SystemParameters.VerticalScrollBarWidth) * 0.75;
@@ -97,6 +126,7 @@ namespace PictureViewer
                             double desired = (this.ActualWidth - 45 - SystemParameters.VerticalScrollBarWidth) * 0.75;
                             return desired < 0 ? 0 : desired;
                         }
+                    case DisplayMode.Setting:
                     case DisplayMode.Folder:
                         return 0;
                     default:
@@ -125,7 +155,7 @@ namespace PictureViewer
                         result = 0;
                         break;
                 }
-                CoordinateConverter.ThumbnailsWidth = result;
+                //CoordinateConverter.ThumbnailsWidth = result;
                 return result;
             }
         }
@@ -155,12 +185,25 @@ namespace PictureViewer
 
         public ObservableCollection<String> People { get; set; }
         public ObservableCollection<RecognitionModel> PeopleImage { get; set; }
-        private BackgroundWorker recognizerWorker { get; set; }
+        private BackgroundWorker RecognizerWorker { get; set; }
+        private BackgroundWorker LoadImageWorker { get; set; }
         public MainWindow()
         {
+            Setting.Current.Init();
+            Setting.Current.PropertyChanged += ((object sender, PropertyChangedEventArgs e) =>
+            {
+                if (Setting.Current.IsRecognitionEnabled)
+                {
+                    InitRecognizer();
+                }
+                else
+                {
+                    RecognizerWorker.CancelAsync();
+                }
+            });
             People = new ObservableCollection<string>();
-            InitRecognizer();
-            //PV_Recognizer.Recognize(new UMat(@"C:\Users\theph\OneDrive\Pictures\Screenshots\Screenshot (109).png", ImreadModes.Color));
+            if (Setting.Current.IsRecognitionEnabled)
+                InitRecognizer();
             list_images = new ObservableCollection<ImageModel>();
             FavoriteFolders = new ObservableCollection<String>();
             using (StreamReader reader = new StreamReader(new BufferedStream(new FileStream("favorite.txt", FileMode.OpenOrCreate, FileAccess.Read), 512)))
@@ -173,77 +216,19 @@ namespace PictureViewer
             InitializeComponent();
             story_main_layout = this.FindResource("story_main_layout") as Storyboard;
             icImages.ItemsSource = list_images;
-
-            //tvi_fav_folders.ItemsSource = FavoriteFolders;
-        }
-        private async void InitRecognizer()
-        {
-            PeopleImage = new ObservableCollection<RecognitionModel>(await PV_Recognizer.InitAsync());
-            //People = new ObservableCollection<String>();
-            List<string> names = PV_Recognizer.GetNames();
-            foreach (string name in names) { People.Add(name); }
-            recognizerWorker = new BackgroundWorker
+            LoadImageWorker = new BackgroundWorker
             {
                 WorkerReportsProgress = true,
                 WorkerSupportsCancellation = true
             };
-            recognizerWorker.DoWork += Worker_DoWork;
-            recognizerWorker.ProgressChanged += Worker_ProgressChanged;
-
-            recognizerWorker.RunWorkerAsync();
-            //Recognize();
+            LoadImageWorker.DoWork += LoadImageWorker_DoWork;
+            LoadImageWorker.ProgressChanged += LoadImageWorker_ProgressChanged;
+            LoadImageWorker.RunWorkerCompleted += LoadImageWorker_RunWorkerCompleted;
+            //tvi_fav_folders.ItemsSource = FavoriteFolders;
         }
 
-        private void Worker_DoWork(object sender, DoWorkEventArgs e)
-        {
-            BackgroundWorker worker = (BackgroundWorker)sender;
-            List<string> checked_file = new List<string>();
-            using (StreamReader reader = new StreamReader(new BufferedStream(new FileStream("checked_file.txt", FileMode.OpenOrCreate, FileAccess.Read), 512)))
-            {
-                while (!reader.EndOfStream)
-                {
-                    checked_file.Add(reader.ReadLine());
-                }
-            }
 
 
-            using (StreamWriter writer = new StreamWriter(new BufferedStream(new FileStream("checked_file.txt", FileMode.Append, FileAccess.Write), 512)))
-            {
-                int i = PV_Recognizer.training_sets.Count;
-                //while (!worker.CancellationPending)
-                {
-                    //System.Threading.Thread.Sleep(2000);
-                    IEnumerable<FileInfo> files = FavoriteFolders.SelectMany(x => (new DirectoryInfo(x).GetFilesByExtensions(".jpg", ".bmp", ".png")))
-                                                    .Where(x => !checked_file.Contains(x.FullName) && x.Length < 10000000);
-                    foreach (FileInfo f in files)
-                    {
-                        List<RecognitionModel> result = (PV_Recognizer.Recognize(new UMat(f.FullName, ImreadModes.Color), f.FullName));
-                        writer.WriteLine(f.FullName);
-                        //foreach (RecognitionModel rm in result) PeopleImage.Add(rm);
-                        worker.ReportProgress(0, result);
-                        
-                        while ((PV_Recognizer.training_sets.Where(x => (!x.Processed)).Count() > 15) && !worker.CancellationPending) System.Threading.Thread.Sleep(2000); ;
-                        if(PV_Recognizer.training_sets.Count-i>30)
-                        {
-                            Console.WriteLine("Re-training recognizer....");
-                            IEnumerable<RecognitionModel> arr = PV_Recognizer.training_sets.Where(x => x.Processed);
-                            PV_Recognizer.Recognizer.Train<Gray, byte>(arr.Select(x => x.FaceImageCV).ToArray(), arr.Select(x => x.LabelInt).ToArray());
-                            i = PV_Recognizer.training_sets.Count;
-                            Console.WriteLine("Training completed!");
-
-                        }
-                    }
-                }
-            }
-        }
-
-        private void Worker_ProgressChanged(object sender, ProgressChangedEventArgs e)
-        {
-            List<RecognitionModel> result = (List<RecognitionModel>)e.UserState;
-            foreach (RecognitionModel rm in result) PeopleImage.Add(rm);
-            if(icImages.ItemsSource!=list_images)
-            icImages.ItemsSource = PeopleImage.Where(x => x.Processed == false);
-        }
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
 
@@ -271,9 +256,20 @@ namespace PictureViewer
         void folder_Selected(object sender, RoutedEventArgs e)
         {
             TreeViewItem item = (TreeViewItem)sender;
-            if (item.Header.ToString() == "Unknown" && item.Tag.ToString() == "Unknown")
+            ItemsControl parent = ItemsControl.ItemsControlFromItemContainer(item);
+            if (parent != null && ((TreeViewItem)parent).Header.ToString() == "People" && ((TreeViewItem)parent).Tag.ToString() == "125987546187")
             {
-                icImages.ItemsSource = PeopleImage.Where(x => x.Processed == false);
+                Console.WriteLine(item.Header.ToString());
+                if (item.Header.ToString() == "Unknown" && item.Tag.ToString() == "Unknown")
+                {
+                    icImages.ItemsSource = PeopleImage.Where(x => x.Processed == false);
+                }
+                else
+                {
+                    List<ImageModel> result = PeopleImage.Where(x => x.Label == item.Header.ToString()).Select(x=>x.FullImage).ToList();
+                    icImages.ItemsSource = result;
+                }
+
                 return;
             }
             else
@@ -281,23 +277,18 @@ namespace PictureViewer
                 if (icImages.ItemsSource != list_images) icImages.ItemsSource = list_images;
             }
             list_images.Clear();
-            IEnumerable<FileInfo> files = new DirectoryInfo(item.Tag.ToString()).GetFilesByExtensions(".jpg", ".bmp", ".png");
             SelectedFolder = item.Tag.ToString();
-            int i = 0;
-            foreach (FileInfo file in files)
+            if (LoadImageWorker.IsBusy)
             {
-                ImageModel im = new ImageModel(file.FullName, ImageModel.LoadingMode.ThumbnailOnly);
-                list_images.Add(im);
-                i++;
+                LoadImageWorker.CancelAsync();
+                //while (loadImageWorker.IsBusy) ;
             }
-            RaiseEvent(new RoutedEventArgs(RoutedPropertyChangedEvent));
-            Parallel.ForEach(list_images, new ParallelOptions { MaxDegreeOfParallelism = 5 }, im =>
-             {
-                 im.Fetch();
-             });
+            else
+            {
+                LoadImageWorker.RunWorkerAsync();
+            }
             e.Handled = true;
         }
-
         private void Image_MouseUp(object sender, MouseButtonEventArgs e)
         {
             Image source = sender as Image;
@@ -342,6 +333,7 @@ namespace PictureViewer
         }
         private void ReEvaluateElements()
         {
+
             PropertyChanged(this, new PropertyChangedEventArgs("Width_Col1"));
             PropertyChanged(this, new PropertyChangedEventArgs("Width_Col2"));
             PropertyChanged(this, new PropertyChangedEventArgs("Width_Col3"));
@@ -351,6 +343,9 @@ namespace PictureViewer
             PropertyChanged(this, new PropertyChangedEventArgs("FavoriteFolders"));
             PropertyChanged(this, new PropertyChangedEventArgs("PeopleImage"));
             PropertyChanged(this, new PropertyChangedEventArgs("People"));
+            PropertyChanged(this, new PropertyChangedEventArgs("HeightTopPanel"));
+            PropertyChanged(this, new PropertyChangedEventArgs("WidthTopPanel"));
+
 
 
         }
@@ -391,6 +386,7 @@ namespace PictureViewer
         private void _this_Closing(object sender, CancelEventArgs e)
         {
             PV_Recognizer.Save();
+            Setting.Current.Save();
             using (StreamWriter writer = new StreamWriter("favorite.txt", false))
             {
                 foreach (String s in FavoriteFolders)
@@ -421,6 +417,119 @@ namespace PictureViewer
             RecognitionModel model = button.Tag as RecognitionModel;
             PV_Recognizer.Train(model, "Unknown");
             icImages.ItemsSource = PeopleImage.Where(x => x.Processed == false);
+        }
+
+        private void LoadImageWorker_DoWork(object sender, DoWorkEventArgs e)
+        {
+            IEnumerable<FileInfo> files = new DirectoryInfo(SelectedFolder).GetFilesByExtensions(".jpg", ".bmp", ".png");
+            BackgroundWorker worker = (BackgroundWorker)sender;
+            int count = files.Count();
+            int i = 0;
+            foreach (FileInfo file in files)
+                if (!worker.CancellationPending)
+                {
+                    ImageModel im = new ImageModel(file.FullName, ImageModel.LoadingMode.ThumbnailOnly);
+                    i++;
+                    im.Fetch();
+                    worker.ReportProgress(i * 100 / count, im);
+                    //list_images.Add(im);
+                }
+                else
+                {
+                    e.Cancel = true;
+                    return;
+                }
+        }
+
+        private void LoadImageWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            if (e.Cancelled)
+            {
+                list_images.Clear();
+                LoadImageWorker.RunWorkerAsync();
+            }
+        }
+
+        private void LoadImageWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+            ImageModel im = (ImageModel)e.UserState;
+            list_images.Add(im);
+            RaiseEvent(new RoutedEventArgs(RoutedPropertyChangedEvent));
+        }
+
+        private async void InitRecognizer()
+        {
+            PeopleImage = new ObservableCollection<RecognitionModel>(await PV_Recognizer.InitAsync());
+            //People = new ObservableCollection<String>();
+            List<string> names = PV_Recognizer.GetNames();
+            foreach (string name in names) { People.Add(name); }
+            RecognizerWorker = new BackgroundWorker
+            {
+                WorkerReportsProgress = true,
+                WorkerSupportsCancellation = true
+            };
+            RecognizerWorker.DoWork += Worker_DoWork;
+            RecognizerWorker.ProgressChanged += Worker_ProgressChanged;
+
+            RecognizerWorker.RunWorkerAsync();
+            //Recognize();
+        }
+
+        private void Worker_DoWork(object sender, DoWorkEventArgs e)
+        {
+            BackgroundWorker worker = (BackgroundWorker)sender;
+            List<string> checked_file = new List<string>();
+            using (StreamReader reader = new StreamReader(new BufferedStream(new FileStream("checked_file.txt", FileMode.OpenOrCreate, FileAccess.Read), 512)))
+            {
+                while (!reader.EndOfStream)
+                {
+                    checked_file.Add(reader.ReadLine());
+                }
+            }
+
+
+            using (StreamWriter writer = new StreamWriter(new BufferedStream(new FileStream("checked_file.txt", FileMode.Append, FileAccess.Write), 512)))
+            {
+                int i = PV_Recognizer.training_sets.Count;
+                //while (!worker.CancellationPending)
+                {
+                    //System.Threading.Thread.Sleep(2000);
+                    IEnumerable<FileInfo> files = FavoriteFolders.SelectMany(x => (new DirectoryInfo(x).GetFilesByExtensions(".jpg", ".bmp", ".png")))
+                                                    .Where(x => !checked_file.Contains(x.FullName) && x.Length < 10000000);
+                    foreach (FileInfo f in files)
+                    {
+                        List<RecognitionModel> result = (PV_Recognizer.Recognize(new UMat(f.FullName, ImreadModes.Color), f.FullName));
+                        writer.WriteLine(f.FullName);
+                        //foreach (RecognitionModel rm in result) PeopleImage.Add(rm);
+                        worker.ReportProgress(0, result);
+
+                        while ((PV_Recognizer.training_sets.Where(x => (!x.Processed)).Count() > 15) && !worker.CancellationPending) System.Threading.Thread.Sleep(2000); ;
+                        if (PV_Recognizer.training_sets.Count - i > 30)
+                        {
+                            Console.WriteLine("Re-training recognizer....");
+                            IEnumerable<RecognitionModel> arr = PV_Recognizer.training_sets.Where(x => x.Processed);
+                            PV_Recognizer.Recognizer.Train<Gray, byte>(arr.Select(x => x.FaceImageCV).ToArray(), arr.Select(x => x.LabelInt).ToArray());
+                            i = PV_Recognizer.training_sets.Count;
+                            Console.WriteLine("Training completed!");
+
+                        }
+                    }
+                }
+            }
+        }
+
+        private void Worker_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+            List<RecognitionModel> result = (List<RecognitionModel>)e.UserState;
+            foreach (RecognitionModel rm in result) PeopleImage.Add(rm);
+            if (icImages.ItemsSource != list_images)
+                icImages.ItemsSource = PeopleImage.Where(x => x.Processed == false);
+        }
+
+        private void btn_setting_Click(object sender, RoutedEventArgs e)
+        {
+            if (mode != DisplayMode.Setting) mode = DisplayMode.Setting;
+            RaiseEvent(new RoutedEventArgs(RoutedPropertyChangedEvent));
         }
     }
 }

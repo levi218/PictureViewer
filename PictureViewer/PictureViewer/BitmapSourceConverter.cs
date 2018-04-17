@@ -10,7 +10,7 @@ using System.Windows.Media.Imaging;
 
 namespace PictureViewer
 {
-    public static class BitmapSourceConverter
+    /*public static class BitmapSourceConverter
     {
         [DllImport("gdi32")]
         private static extern int DeleteObject(IntPtr o);
@@ -31,5 +31,5 @@ namespace PictureViewer
                 return bs;
             }
         }
-    }
+    }*/
 }

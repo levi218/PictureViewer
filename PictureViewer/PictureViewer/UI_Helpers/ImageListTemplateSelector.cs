@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -24,7 +25,7 @@ namespace PictureViewer
                 }
                 else
                 {
-                    TrainingTemplate = frameworkElement.FindResource("imageItemTrainingTemplate") as DataTemplate;
+                    //TrainingTemplate = frameworkElement.FindResource("imageItemTrainingTemplate") as DataTemplate;
                     return TrainingTemplate;
                 }
             } else return null;

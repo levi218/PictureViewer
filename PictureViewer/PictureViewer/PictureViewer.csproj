@@ -77,10 +77,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="BitmapSourceConverter.cs" />
-    <Compile Include="ImageListTemplateSelector.cs" />
-    <Compile Include="CoordinateConverter.cs" />
-    <Compile Include="RecognitionModel.cs" />
+    <Compile Include="UI_Helpers\ImageListTemplateSelector.cs" />
+    <Compile Include="Recognition\RecognitionModel.cs" />
+    <Compile Include="Setting.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -89,7 +88,7 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="PV_Recognizer.cs" />
+    <Compile Include="Recognition\PV_Recognizer.cs" />
     <Compile Include="FileHelpers.cs" />
     <Compile Include="ImageModel.cs" />
     <Compile Include="MainWindow.xaml.cs">
@@ -98,7 +97,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="PathToNameConverter.cs" />
+    <Compile Include="UI_Helpers\PathToNameConverter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -126,18 +125,13 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="tumblr_nx3glupchS1tvhy2qo1_540.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="23335724_1978438932378920_59330873_o.jpg" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="haarcascade_eye.xml">
+    <Resource Include="Recognition\haarcascade_eye.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="haarcascade_frontalface_default.xml">
+    <Resource Include="Recognition\haarcascade_frontalface_default.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
