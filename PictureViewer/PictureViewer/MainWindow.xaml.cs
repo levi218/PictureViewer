@@ -21,6 +21,12 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
+/* 
+ * EDIT HISTORY:
+ *  190329 DeltaPeng - corrected issue of pictures/tabs not changing when clicked
+ * ~180417 levi218 - original program created
+ */
+
 namespace PictureViewer
 {
 
@@ -44,6 +50,19 @@ namespace PictureViewer
             }
         }
         private enum DisplayMode { IndividualPic, Folder, Setting };
+        //190329 DeltaPeng - modified below to make internal var prefixed with _, and make the mode a property which will call a refresh when set, to ensure the panel switched/updates properly in the UI
+        private DisplayMode _mode = DisplayMode.Folder;
+        private DisplayMode mode
+        {
+            get { return _mode; }
+            set
+            {
+                _mode = value;
+                //run event to refresh the UI when mode changes
+                ModeChanged(this, null);
+            }
+        }
+
         Storyboard story_main_layout;
         public double HeightTopPanel
         {
@@ -167,7 +186,7 @@ namespace PictureViewer
             }
         }
 
-        private DisplayMode mode = DisplayMode.Folder;
+        //private DisplayMode mode = DisplayMode.Folder;  //190329 DeltaPeng
         private object dummyNode = null;
         private String SelectedFolder;
         public ObservableCollection<String> FavoriteFolders { get; set; }
@@ -349,7 +368,9 @@ namespace PictureViewer
 
 
         }
-        private void _this_StateChanged(object sender, EventArgs e)
+	//190329 DeltaPeng - renamed from statechanged, also removed that event trigger in the xaml
+	//private void _this_StateChanged(object sender, EventArgs e)
+        private void ModeChanged(object sender, EventArgs e)        
         {
             ReEvaluateElements();
         }
