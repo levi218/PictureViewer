@@ -1,0 +1,29 @@
+﻿<Window x:Class="PhotoSender.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:PhotoSender"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid>
+        <ListView Name="lvFriendList" Margin="10,66,10.333,34.667">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <WrapPanel>
+                        <Image Source="{Binding ProfilePicture}" />
+                        <TextBlock Text="  " />
+                        <TextBlock Text="{Binding Name}" />
+                    </WrapPanel>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+        <TextBox Name="txtPath" Margin="113,10,142.333,0" TextWrapping="Wrap" Height="23" VerticalAlignment="Top"/>
+        <Button Content="Choose file" Margin="0,10,10.333,0" HorizontalAlignment="Right" Width="127" Height="20" VerticalAlignment="Top"/>
+        <Button Name="btnSend" Click="BtnSend_Click" Content="Send" Margin="10,0,10.333,9.667" Height="20" VerticalAlignment="Bottom"/>
+        <Label Content="File to send" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="98"/>
+        <Label Content="Filter" HorizontalAlignment="Left" Margin="10,38,0,0" VerticalAlignment="Top" Width="98"/>
+        <TextBox Name="txtFilter" TextChanged="TxtFilter_TextChanged" Height="23" Margin="113,38,10.333,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
+
+    </Grid>
+</Window>

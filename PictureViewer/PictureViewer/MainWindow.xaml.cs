@@ -498,7 +498,8 @@ namespace PictureViewer
                                                     .Where(x => !checked_file.Contains(x.FullName) && x.Length < 10000000);
                     foreach (FileInfo f in files)
                     {
-                        List<RecognitionModel> result = (PV_Recognizer.Recognize(new UMat(f.FullName, ImreadModes.Color), f.FullName));
+                        CvInvoke.Resize
+                        List<RecognitionModel> result = (PV_Recognizer.Recognize(new UMat(f.FullName, ImreadModes.Color)., f.FullName));
                         writer.WriteLine(f.FullName);
                         //foreach (RecognitionModel rm in result) PeopleImage.Add(rm);
                         worker.ReportProgress(0, result);
@@ -508,7 +509,7 @@ namespace PictureViewer
                         {
                             Console.WriteLine("Re-training recognizer....");
                             IEnumerable<RecognitionModel> arr = PV_Recognizer.training_sets.Where(x => x.Processed);
-                            PV_Recognizer.Recognizer.Train<Gray, byte>(arr.Select(x => x.FaceImageCV).ToArray(), arr.Select(x => x.LabelInt).ToArray());
+                            PV_Recognizer.Recognizer.Train(arr.Select(x => x.FaceImageCV).ToArray(), arr.Select(x => x.LabelInt).ToArray());
                             i = PV_Recognizer.training_sets.Count;
                             Console.WriteLine("Training completed!");
 

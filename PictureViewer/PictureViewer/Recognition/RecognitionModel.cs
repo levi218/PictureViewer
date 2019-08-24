@@ -44,7 +44,9 @@ namespace PictureViewer
                 if (_Face != null)
                     _Face.CurrentFile = value;
                 else _Face = new ImageModel(value, ImageModel.LoadingMode.ThumbnailOnly);
-                FaceImageCV = new Image<Gray, byte>(value).Resize(100, 100, Inter.Cubic);
+
+                FaceImageCV = new Image<Gray, byte>(value).Resize(100, 100, Inter.Cubic).Mat;
+                
             }
         }
         private String _FullImageUri;
@@ -62,7 +64,7 @@ namespace PictureViewer
                 else _FullImage = new ImageModel(value, ImageModel.LoadingMode.ThumbnailOnly);
             }
         }
-        public Image<Gray, byte> FaceImageCV { get; private set; }
+        public Mat FaceImageCV { get; private set; }
         public bool Processed { get; set; }
 
         public double Distance { get; set; }

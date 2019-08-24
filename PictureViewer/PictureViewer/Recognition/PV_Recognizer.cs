@@ -67,7 +67,7 @@ namespace PictureViewer
             if (training_sets.Count > 0)
             {
                 IEnumerable<RecognitionModel> arr = training_sets.Where(x => x.Processed);
-                Recognizer.Train<Gray, byte>(arr.Select(x => x.FaceImageCV).ToArray(), arr.Select(x => x.LabelInt).ToArray());
+                Recognizer.Train(arr.Select(x => x.FaceImageCV).ToArray(), arr.Select(x => x.LabelInt).ToArray());
                 Trained = true;
             }
 
@@ -181,87 +181,6 @@ namespace PictureViewer
 
             using (InputArray iaImage = image.GetInputArray())
             {
-
-                /*#if !(__IOS__ || NETFX_CORE)
-                                if (iaImage.Kind == InputArray.Type.CudaGpuMat && CudaInvoke.HasCuda)
-                                {
-                                    Console.WriteLine("CUDA MODE");
-                                    using (CudaCascadeClassifier face = new CudaCascadeClassifier(faceFileName))
-                                    using (CudaCascadeClassifier eye = new CudaCascadeClassifier(eyeFileName))
-                                    {
-                                        face.ScaleFactor = 1.1;
-                                        face.MinNeighbors = 10;
-                                        face.MinObjectSize = Size.Empty;
-                                        eye.ScaleFactor = 1.1;
-                                        eye.MinNeighbors = 10;
-                                        eye.MinObjectSize = Size.Empty;
-                                        watch = Stopwatch.StartNew();
-                                        using (CudaImage<Bgr, Byte> gpuImage = new CudaImage<Bgr, byte>(image))
-                                        using (CudaImage<Gray, Byte> gpuGray = gpuImage.Convert<Gray, Byte>())
-                                        using (GpuMat region = new GpuMat())
-                                        {
-                                            face.DetectMultiScale(gpuGray, region);
-                                            Rectangle[] faceRegion = face.Convert(region);
-                                            //faces.AddRange(faceRegion);
-                                            Console.WriteLine(faceRegion.Length);
-
-                                            bool[] checking_arr = new bool[faceRegion.Length];
-                                            for (int i = 0; i < faceRegion.Length; i++)
-                                            {
-                                                checking_arr[i] = true;
-                                            }
-                                            for (int i = 0; i < faceRegion.Length; i++)
-                                            {
-                                                for (int j = 0; j < faceRegion.Length; j++)
-                                                    if (i != j)
-                                                    {
-                                                        Rectangle f1 = faceRegion[i];
-                                                        Rectangle f2 = faceRegion[j];
-                                                        Console.WriteLine(f1.ToString());
-                                                        Console.WriteLine(f2.ToString());
-
-                                                        if (f1.IntersectsWith(f2))
-                                                        {
-                                                            Rectangle f_inter = Rectangle.Intersect(f1, f2);
-                                                            Console.WriteLine(f_inter.Height * f_inter.Width + "   " + f1.Height * f1.Width + "   " + f2.Height * f2.Width);
-                                                            if ((f1.Height * f1.Width > f2.Height * f2.Width)
-                                                                && (f1.Height * f1.Width * 0.1 < f_inter.Height * f_inter.Width))
-                                                            {
-                                                                checking_arr[j] = false;
-                                                            }
-                                                        }
-                                                    }
-                                            }
-                                            for (int i = 0; i < faceRegion.Length; i++)
-                                            {
-                                                if (!checking_arr[i]) continue;
-                                                Rectangle f = faceRegion[i];
-                                                using (CudaImage<Gray, Byte> faceImg = gpuGray.GetSubRect(f))
-                                                {
-
-                                                    //For some reason a clone is required.
-                                                    //Might be a bug of CudaCascadeClassifier in opencv
-                                                    using (CudaImage<Gray, Byte> clone = faceImg.Clone(null))
-                                                    using (GpuMat eyeRegionMat = new GpuMat())
-                                                    {
-                                                        eye.DetectMultiScale(clone, eyeRegionMat);
-                                                        Rectangle[] eyeRegion = eye.Convert(eyeRegionMat);
-                                                        if (eyeRegion.Length > 0) faces.Add(f);
-                                                        foreach (Rectangle e in eyeRegion)
-                                                        {
-                                                            Rectangle eyeRect = e;
-                                                            eyeRect.Offset(f.X, f.Y);
-                                                            eyes.Add(eyeRect);
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        watch.Stop();
-                                    }
-                                }
-                                else
-                #endif*/
                 {
                     Console.WriteLine("Normal MODE");
                     //Read the HaarCascade objects
@@ -281,10 +200,10 @@ namespace PictureViewer
                             //The first dimensional is the channel
                             //The second dimension is the index of the rectangle in the specific channel                     
                             Rectangle[] facesDetected = face.DetectMultiScale(
-                               ugray,
+                               ugray/*,
                                1.1,
-                               10,
-                               new Size(20, 20));
+                               3,
+                               new Size(20, 20)*/);
 
                             //faces.AddRange(facesDetected);
                             Console.WriteLine(facesDetected.Length);

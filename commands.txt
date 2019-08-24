@@ -1,0 +1,5 @@
+PhotoImporter.exe -i "E:\DCIM\100MSDCF" "C:\Users\theph\Pictures"
+node index.js -f
+node index.js -p "100002995566344" "DSC01970.JPG"
+
+C:\Users\theph\Pictures\2019.08.06\DSC02242.JPG
