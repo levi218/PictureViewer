@@ -15,7 +15,7 @@
         TextOptions.TextRenderingMode="Auto"        
         x:Name="_this"
         Background="{DynamicResource MaterialDesignPaper}"
-        FontFamily="{DynamicResource MaterialDesignFont}" Loaded="Window_Loaded" SizeChanged="Window_SizeChanged" StateChanged="_this_StateChanged" Activated="_this_Activated" Closing="_this_Closing">
+        FontFamily="{DynamicResource MaterialDesignFont}" Loaded="Window_Loaded" SizeChanged="Window_SizeChanged" Activated="_this_Activated" Closing="_this_Closing">
     <Window.Resources>
         <local:PathToNameConverter x:Key="pathToNameConverter"></local:PathToNameConverter>
 
